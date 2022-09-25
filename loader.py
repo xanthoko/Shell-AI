@@ -4,7 +4,6 @@ import csv
 import numpy as np
 import pandas as pd
 
-
 dataset_dir = 'dataset/'
 output_dir = 'outputs/'
 
@@ -13,9 +12,11 @@ def load_demand_points(year: int) -> pd.DataFrame:
     historic = pd.read_csv(dataset_dir + 'Demand_History.csv')
     prophet_predictions = pd.read_csv(dataset_dir + 'prophet_2019_2020.csv')
     if year == 2019:
-        predictions = prophet_predictions.drop(['2020'], axis=1).rename(columns={'2019': 'value'})
+        predictions = prophet_predictions.drop(
+            ['2020'], axis=1).rename(columns={'2019': 'value'})
     elif year == 2020:
-        predictions = prophet_predictions.drop(['2019'], axis=1).rename(columns={'2020': 'value'})
+        predictions = prophet_predictions.drop(
+            ['2019'], axis=1).rename(columns={'2020': 'value'})
 
     predictions.insert(1, 'x', historic.x_coordinate)
     predictions.insert(2, 'y', historic.y_coordinate)
@@ -25,16 +26,19 @@ def load_demand_points(year: int) -> pd.DataFrame:
 
 def load_infrastructure() -> pd.DataFrame:
     existing = pd.read_csv(dataset_dir + 'exisiting_EV_infrastructure_2018.csv')
-    return existing.rename({
-        'x_coordinate': 'x',
-        'y_coordinate': 'y',
-        'existing_num_SCS': 'scs',
-        'existing_num_FCS': 'fcs'
-    }, axis=1)
+    return existing.rename(
+        {
+            'x_coordinate': 'x',
+            'y_coordinate': 'y',
+            'existing_num_SCS': 'scs',
+            'existing_num_FCS': 'fcs'
+        },
+        axis=1)
 
 
 def load_distances() -> tuple[np.ndarray, np.ndarray]:
-    return np.load(dataset_dir + 'distance.npy'), np.load(dataset_dir + 'reverse_proximity.npy')
+    return np.load(dataset_dir + 'distance.npy'), np.load(dataset_dir +
+                                                          'reverse_proximity.npy')
 
 
 def load_previous_chargers(year: int) -> dict[int, tuple[int, int]]:
