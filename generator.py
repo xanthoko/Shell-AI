@@ -30,7 +30,7 @@ from loader import output_distribution
 from loader import load_infrastructure
 from loader import load_previous_chargers
 
-YEAR = 2020
+YEAR = 2019
 GENERATIONS = 100
 POPULATION_SIZE = 200  # Number of individuals in each generation
 output_dir = 'outputs/'
@@ -84,8 +84,8 @@ def crossover_twopoints(parent1: dict, parent2: dict, start: int,
     offspring1 = {}
     offspring2 = {}
     # two-point separation
-    point_one = random.randint(start, start + 15)
-    point_two = random.randint(end, end + 15)
+    point_one = random.randint(start, start + 45)
+    point_two = random.randint(end, end + 45)
     # Generate 1st offsrping
     offspring1.update(dict(list(parent1.items())[:point_one]).items())
     offspring1.update(dict(list(parent2.items())[point_one:point_two]).items())
@@ -103,7 +103,6 @@ def random_crossover(parent1: dict, parent2: dict):
     for gp1, gp2 in zip(parent1.items(), parent2.items()):
         # random probability
         prob = random.random()
-        print(prob)
         # if prob is less than 0.45, insert gene from parent 1
         if prob < 0.5:
             offspring1.update({gp1[0]: gp1[1]})
@@ -135,18 +134,6 @@ def mutate(offspring: dict, num_of_charges: int) -> dict:
     return offspring
 
 
-def roulette_wheel_selection(population):
-  
-    # Computes the totallity of the population fitness
-    population_fitness = sum([chromosome.fitness for chromosome in population])
-    
-    # Computes for each chromosome the probability 
-    chromosome_probabilities = [chromosome.fitness/population_fitness for chromosome in population]
-    
-    # Selects one chromosome based on the computed probabilities
-    return choice(population, p=chromosome_probabilities)
-
-
 def save_file(solution):
     a_file = open("solution.pkl", "wb")
     pickle.dump(solution, a_file)
@@ -174,11 +161,22 @@ population = sorted(population, key=lambda x: x[1])
 # current generation
 generation = 1
 found = False
-best_per_population = {}
+best_per_population = []
 
 pc = 0.7 #Probability of crossover 
 pm = 0.1 #Probability of mutation
- 
+
+  
+# Computes the totallity of the population fitness
+population_fitness = sum([chromosome[1] for chromosome in population])
+
+# Computes for each chromosome the probability 
+chromosome_probabilities = [chromosome[1]/population_fitness for chromosome in population]
+
+# Selects one chromosome based on the computed probabilities
+# choice(population, p=chromosome_probabilities)
+population_1 = [chromosome[0] for chromosome in population]
+
 while generation <= GENERATIONS:
     # Perform Elitism, that mean 10% of fittest population
     # goes to the next generation
@@ -187,13 +185,28 @@ while generation <= GENERATIONS:
 
     # From 50% of fittest population, Individuals will mate to produce offspring
     s = (90 * POPULATION_SIZE) // 100
+    s = s//2
+    # input('ddddd')
     for _ in range(s):
-        # Selection
-        parent1 = random.choice(population[:50])
-        parent2 = random.choice(population[:50])
+        # Selection οf chromosomes based on the computed probabilities
+        # parent1 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
+        # parent2 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
+        parent1 = random.choice(population[:50])[0]
+        parent2 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
+
 
         # Crossover
-        child1, child2 = crossover(parent1[0], parent2[0], 40, 60)
+        match random.randint(1,3):
+            case 1:
+                child1, child2 = crossover(parent1, parent2, 40, 60)
+            case 2:
+                child1, child2 = crossover_twopoints(parent1, parent2, 5, 55)
+            case 3:
+                child1, child2 = random_crossover(parent1, parent2)
+            case _:
+                child1, child2 = crossover(parent1, parent2, 40, 60)
+
+        # child1, child2 = crossover(parent1[0], parent2[0], 40, 60)
         
         # Mutate
         child1 = mutate(child1, random.randint(2, 10))
@@ -210,11 +223,13 @@ while generation <= GENERATIONS:
              fitness_function(child2, sorted_demand_points, reverse_proximity,
                               parking_slots, previous_charges, demand_values,
                               distance_matrix)))
+        
+    population = new_generation
 
     # sort the population in increasing order of fitness score
     population = sorted(new_generation, key=lambda x: x[1])
 
-    best_per_population[generation] = population[0][1]
+    best_per_population.append((population[0][0], population[0][1], generation))
     print(f'Gen.: {generation}\t\t Cost: {population[0][1]}')
 
     generation += 1
@@ -227,3 +242,8 @@ best_ds = distribute_supply(best_population, sorted_demand_points,
 
 output_chargers(best_population, YEAR)
 output_distribution(best_ds, YEAR)
+
+best_per_population = sorted(best_per_population, key=lambda x: x[1])
+a_file = open("best_per_population.pkl", "wb")
+pickle.dump(best_per_population, a_file)
+a_file.close()
