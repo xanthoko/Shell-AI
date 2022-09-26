@@ -38,9 +38,9 @@ def check_constraint_4(_cscs: list[int], _cfcs: list[int], _pscs: list[int],
                        _pfcs: list[int]) -> None:
     for i in range(100):
         assert _cscs[i] >= _pscs[
-            i], f'Constraint 4 failed for {i}. Cur={_cscs[i]} Prev={_pscs}'
+            i], f'Constraint 4 failed for {i}. Cur={_cscs[i]} Prev={_pscs[i]}'
         assert _cfcs[i] >= _pfcs[
-            i], f'Constraint 4 failed for {i}. Cur={_cfcs[i]} Prev={_pfcs}'
+            i], f'Constraint 4 failed for {i}. Cur={_cfcs[i]} Prev={_pfcs[i]}'
     print('Constraint 4 ... OK')
 
 
