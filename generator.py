@@ -19,6 +19,7 @@ from __future__ import annotations
 import random
 import pickle
 import pandas as pd
+from numpy.random import choice
 
 from cost import fitness_function
 from cost import distribute_supply
@@ -134,6 +135,18 @@ def mutate(offspring: dict, num_of_charges: int) -> dict:
     return offspring
 
 
+def roulette_wheel_selection(population):
+  
+    # Computes the totallity of the population fitness
+    population_fitness = sum([chromosome.fitness for chromosome in population])
+    
+    # Computes for each chromosome the probability 
+    chromosome_probabilities = [chromosome.fitness/population_fitness for chromosome in population]
+    
+    # Selects one chromosome based on the computed probabilities
+    return choice(population, p=chromosome_probabilities)
+
+
 def save_file(solution):
     a_file = open("solution.pkl", "wb")
     pickle.dump(solution, a_file)
@@ -163,6 +176,9 @@ generation = 1
 found = False
 best_per_population = {}
 
+pc = 0.7 #Probability of crossover 
+pm = 0.1 #Probability of mutation
+ 
 while generation <= GENERATIONS:
     # Perform Elitism, that mean 10% of fittest population
     # goes to the next generation
@@ -172,10 +188,13 @@ while generation <= GENERATIONS:
     # From 50% of fittest population, Individuals will mate to produce offspring
     s = (90 * POPULATION_SIZE) // 100
     for _ in range(s):
-        # Crossover
+        # Selection
         parent1 = random.choice(population[:50])
         parent2 = random.choice(population[:50])
+
+        # Crossover
         child1, child2 = crossover(parent1[0], parent2[0], 40, 60)
+        
         # Mutate
         child1 = mutate(child1, random.randint(2, 10))
         child2 = mutate(child2, random.randint(2, 10))
