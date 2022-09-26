@@ -114,13 +114,15 @@ def get_overall_cost(_ds: np.ndarray, _supply_charges: dict[int, tuple[int, int]
     return a * cost_1 + c * cost_3
 
 
-def fitness_function(_supply_charges: dict[int, tuple[int, int]],
-                     sorted_demands: pd.DataFrame, reverse_proximity: np.ndarray,
-                     parking_slots: list[int], previous_charges: dict[int,
-                                                                      tuple[int,
-                                                                            int]],
-                     demand_values: list[float],
-                     distance_matrix: np.ndarray) -> float:
+def fitness_function(
+    _supply_charges: dict[int, tuple[int, int]],
+    sorted_demands: pd.DataFrame,
+    reverse_proximity: np.ndarray,
+    parking_slots: list[int],
+    previous_charges: dict[int, tuple[int, int]],
+    demand_values: list[float],
+    distance_matrix: np.ndarray,
+) -> float:
     try:
         ds = distribute_supply(_supply_charges, sorted_demands, reverse_proximity)
         check_constraints(ds, _supply_charges, parking_slots, previous_charges,
