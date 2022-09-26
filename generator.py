@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import random
 import pickle
+import time
 import pandas as pd
 from numpy.random import choice
 
@@ -30,9 +31,9 @@ from loader import output_distribution
 from loader import load_infrastructure
 from loader import load_previous_chargers
 
-YEAR = 2019
-GENERATIONS = 100
-POPULATION_SIZE = 200  # Number of individuals in each generation
+YEAR = 2020
+GENERATIONS = 500
+POPULATION_SIZE = 400  # Number of individuals in each generation
 output_dir = 'outputs/'
 
 demand_points: pd.DataFrame = load_demand_points(YEAR)
@@ -79,13 +80,19 @@ def crossover(parent1: dict, parent2: dict, start: int,
     return (offspring1, offspring2)
 
 
-def crossover_twopoints(parent1: dict, parent2: dict, start: int,
-                        end: int) -> tuple[dict, dict]:
+def crossover_twopoints(parent1: dict, parent2: dict, start: int = None,
+                        end: int = None) -> tuple[dict, dict]:
     offspring1 = {}
     offspring2 = {}
+    
     # two-point separation
-    point_one = random.randint(start, start + 45)
-    point_two = random.randint(end, end + 45)
+    # point_one = random.randint(start, start + 45)
+    # point_two = random.randint(end, end + 45)
+
+    # two-point separation
+    point_one = random.randint(2, 80)
+    point_two = random.randint(point_one + 5, 95)
+
     # Generate 1st offsrping
     offspring1.update(dict(list(parent1.items())[:point_one]).items())
     offspring1.update(dict(list(parent2.items())[point_one:point_two]).items())
@@ -108,15 +115,10 @@ def random_crossover(parent1: dict, parent2: dict):
             offspring1.update({gp1[0]: gp1[1]})
             offspring2.update({gp2[0]: gp2[1]})
 
-        # if prob is between 0.45 and 0.90, insert gene from parent 2
-        elif prob < 1:
+        # if prob is higher than 0.5, insert gene from parent 2
+        elif prob >= 0.5:
             offspring1.update({gp2[0]: gp2[1]})
             offspring2.update({gp1[0]: gp1[1]})
-
-        # otherwise invert number of chargers between fcs & scf, for maintaining diversity
-        # else:
-        #   offspring1.update({gp1[0]:(gp1[1][1], gp1[1][0])})
-        #   offspring2.update({gp2[0]:(gp2[1][1], gp2[1][0])})
 
     return (offspring1, offspring2)
 
@@ -149,7 +151,7 @@ def load_pckl():
 
 population = []
 for _ in range(POPULATION_SIZE):
-    gnome = offspring_generator(random.uniform(0.9, 1))
+    gnome = offspring_generator(random.uniform(0.95, 1))
     score = fitness_function(gnome, sorted_demand_points, reverse_proximity,
                              parking_slots, previous_charges, demand_values,
                              distance_matrix)
@@ -160,22 +162,11 @@ population = sorted(population, key=lambda x: x[1])
 
 # current generation
 generation = 1
-found = False
 best_per_population = []
 
-pc = 0.7 #Probability of crossover 
-pm = 0.1 #Probability of mutation
+pc = 0.8 #Probability of crossover 
+pm = 0.25 #Probability of mutation
 
-  
-# Computes the totallity of the population fitness
-population_fitness = sum([chromosome[1] for chromosome in population])
-
-# Computes for each chromosome the probability 
-chromosome_probabilities = [chromosome[1]/population_fitness for chromosome in population]
-
-# Selects one chromosome based on the computed probabilities
-# choice(population, p=chromosome_probabilities)
-population_1 = [chromosome[0] for chromosome in population]
 
 while generation <= GENERATIONS:
     # Perform Elitism, that mean 10% of fittest population
@@ -186,31 +177,51 @@ while generation <= GENERATIONS:
     # From 50% of fittest population, Individuals will mate to produce offspring
     s = (90 * POPULATION_SIZE) // 100
     s = s//2
-    # input('ddddd')
+
+    # Computes the totallity of the population fitness
+    population_fitness = sum([chromosome[1] for chromosome in population])
+
+    # Computes for each chromosome the probability 
+    chromosome_probabilities = [chromosome[1]/population_fitness for chromosome in population]
+
+
+    # Selects one chromosome based on the computed probabilities
+    # choice(population, p=chromosome_probabilities)
+    population_1 = [chromosome[0] for chromosome in population]
+    
+    # Dynamic calculation of pc & pm
+    pm = generation/GENERATIONS
+    pc= 1 - pm
+    
     for _ in range(s):
         # Selection οf chromosomes based on the computed probabilities
         # parent1 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
         # parent2 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
-        parent1 = random.choice(population[:50])[0]
-        parent2 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
+        parent1 = random.choice(population[:POPULATION_SIZE//2])[0]
+        parent2 = random.choice(population[:POPULATION_SIZE//2])[0] #random.choice(population[:50])
 
 
         # Crossover
-        match random.randint(1,3):
-            case 1:
-                child1, child2 = crossover(parent1, parent2, 40, 60)
-            case 2:
-                child1, child2 = crossover_twopoints(parent1, parent2, 5, 55)
-            case 3:
-                child1, child2 = random_crossover(parent1, parent2)
-            case _:
-                child1, child2 = crossover(parent1, parent2, 40, 60)
+        
+        if random.uniform(0, 1) < pc:
+            match random.randint(1,3):
+                case 1:
+                    child1, child2 = crossover(parent1, parent2, 2, 98)
+                case 2:
+                    child1, child2 = crossover_twopoints(parent1, parent2)
+                case 3:
+                    child1, child2 = random_crossover(parent1, parent2)
+                case _:
+                    child1, child2 = crossover(parent1, parent2, 40, 60)
+        else:
+            child1, child2 = parent1, parent2
 
         # child1, child2 = crossover(parent1[0], parent2[0], 40, 60)
         
         # Mutate
-        child1 = mutate(child1, random.randint(2, 10))
-        child2 = mutate(child2, random.randint(2, 10))
+        if random.uniform(0, 1) < pm:
+            child1 = mutate(child1, random.randint(10, 20))
+            child2 = mutate(child2, random.randint(10, 20))
 
         # Fitness calculation
         new_generation.append(
@@ -230,7 +241,9 @@ while generation <= GENERATIONS:
     population = sorted(new_generation, key=lambda x: x[1])
 
     best_per_population.append((population[0][0], population[0][1], generation))
-    print(f'Gen.: {generation}\t\t Cost: {population[0][1]}')
+    print(f'Gen.: {generation}\t\t Cost: {population[0][1]}\t Worst cost: {population[-1][1]}')
+    # d = [c[1] for c in population]
+    # print(f'Unique chromosomes in generation {generation}: {len(set(d))}')
 
     generation += 1
 
@@ -244,6 +257,12 @@ output_chargers(best_population, YEAR)
 output_distribution(best_ds, YEAR)
 
 best_per_population = sorted(best_per_population, key=lambda x: x[1])
-a_file = open("best_per_population.pkl", "wb")
+# pop_size + num_of_generations + pc + mc
+file_name = f'{POPULATION_SIZE}_{GENERATIONS}_{pc}_{pm}_{time.strftime("%Y%m%d-%H%M%S")}_best_per_population'
+
+a_file = open(file_name, "wb")
 pickle.dump(best_per_population, a_file)
 a_file.close()
+print(f'In best_per_population list, Best Cost: {best_per_population[0][1]}\t Worst cost: {best_per_population[-1][1]}')
+dd = [c[1] for c in best_per_population]
+print(f'Unique chromosomes in best_per_population: {len(set(dd))}')
