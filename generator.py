@@ -32,8 +32,8 @@ from loader import load_infrastructure
 from loader import load_previous_chargers
 
 YEAR = 2020
-GENERATIONS = 500
-POPULATION_SIZE = 400  # Number of individuals in each generation
+GENERATIONS = 750
+POPULATION_SIZE = 500  # Number of individuals in each generation
 output_dir = 'outputs/'
 
 demand_points: pd.DataFrame = load_demand_points(YEAR)
@@ -203,8 +203,8 @@ while generation <= GENERATIONS:
 
         # Crossover
         
-        if random.uniform(0, 1) < pc:
-            match random.randint(1,3):
+        if random.uniform(0, 1) <= 1:#pc:
+            match random.randint(3,3):
                 case 1:
                     child1, child2 = crossover(parent1, parent2, 2, 98)
                 case 2:
@@ -234,7 +234,7 @@ while generation <= GENERATIONS:
              fitness_function(child2, sorted_demand_points, reverse_proximity,
                               parking_slots, previous_charges, demand_values,
                               distance_matrix)))
-        
+
     population = new_generation
 
     # sort the population in increasing order of fitness score
@@ -258,7 +258,7 @@ output_distribution(best_ds, YEAR)
 
 best_per_population = sorted(best_per_population, key=lambda x: x[1])
 # pop_size + num_of_generations + pc + mc
-file_name = f'{POPULATION_SIZE}_{GENERATIONS}_{pc}_{pm}_{time.strftime("%Y%m%d-%H%M%S")}_best_per_population'
+file_name = f'{output_dir}exports/{POPULATION_SIZE}_{GENERATIONS}_{pc}_{pm}_{time.strftime("%Y%m%d-%H%M%S")}_best_per_population'
 
 a_file = open(file_name, "wb")
 pickle.dump(best_per_population, a_file)
