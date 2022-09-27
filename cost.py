@@ -8,11 +8,14 @@ SLOW_CHARGE_CAP = 200
 FAST_CHARGE_CAP = 400
 
 
+Genome = dict[int, tuple[int, int]]
+
+
 def get_max_supply(supply_charge: tuple[int, int]) -> int:
     return SLOW_CHARGE_CAP * supply_charge[0] + FAST_CHARGE_CAP * supply_charge[1]
 
 
-def distribute_supply(supply_charges: dict[int, tuple[int, int]],
+def distribute_supply(supply_charges: Genome,
                       sorted_demands: list[tuple[int, float]],
                       reverse_proximity: np.ndarray) -> np.ndarray:
     ds = np.zeros((4096, 100))
@@ -40,7 +43,7 @@ def check_constraint_1(_ds: np.ndarray) -> None:
     assert a == 0, f'Constraint 1 failed. {a} negative values in DS found.'
 
 
-def check_constraint_2_3(_supply_charges: dict[int, tuple[int, int]],
+def check_constraint_2_3(_supply_charges: Genome,
                          parking_slots: list[int]) -> None:
     for i in range(100):
         scs = _supply_charges[i][0]
@@ -51,8 +54,8 @@ def check_constraint_2_3(_supply_charges: dict[int, tuple[int, int]],
         assert scs + fcs <= tps, f'Constraint 3 failed for {i}. TPS={tps}'
 
 
-def check_constraint_4(_supply_charges: dict[int, tuple[int, int]],
-                       previous_charges: dict[int, tuple[int, int]]) -> None:
+def check_constraint_4(_supply_charges: Genome,
+                       previous_charges: Genome) -> None:
     for i in range(100):
         cs, cf = _supply_charges[i]
         ps, pf = previous_charges[i]
@@ -61,7 +64,7 @@ def check_constraint_4(_supply_charges: dict[int, tuple[int, int]],
 
 
 def check_constraint_5(_ds: np.ndarray,
-                       _supply_charges: dict[int, tuple[int, int]]) -> None:
+                       _supply_charges: Genome) -> None:
     sum_of_cols = _ds.sum(axis=0)
 
     for i in range(100):
@@ -82,7 +85,7 @@ def check_constraint_6(_ds: np.ndarray, demand_values: list[float]) -> None:
             b) < 10**-2, f'Constraint 6 failed for row {i}. Sum={a} - Demand={b}'
 
 
-def check_constraints(_ds: np.ndarray, _supply_charges: dict[int, tuple[int, int]],
+def check_constraints(_ds: np.ndarray, _supply_charges: Genome,
                       parking_slots: list[int], previous_charges: dict[int,
                                                                        tuple[int,
                                                                              int]],
@@ -98,7 +101,7 @@ def get_cost_1(_ds: np.ndarray, distance_matrix: np.ndarray) -> float:
     return np.sum(distance_matrix * _ds, axis=(0, 1))
 
 
-def get_cost_3(_supply_charges: dict[int, tuple[int, int]]) -> float:
+def get_cost_3(_supply_charges: Genome) -> float:
     cost_3 = 0
     for i in range(100):
         cost_3 += _supply_charges[i][0] + 1.5 * _supply_charges[i][1]
@@ -106,7 +109,7 @@ def get_cost_3(_supply_charges: dict[int, tuple[int, int]]) -> float:
     return cost_3
 
 
-def get_overall_cost(_ds: np.ndarray, _supply_charges: dict[int, tuple[int, int]],
+def get_overall_cost(_ds: np.ndarray, _supply_charges: Genome,
                      distance_matrix: np.ndarray) -> float:
     a, c = 1, 600
     cost_1 = get_cost_1(_ds, distance_matrix)
@@ -121,7 +124,7 @@ class Fitness:
         sorted_demands: pd.DataFrame,
         reverse_proximity: np.ndarray,
         parking_slots: list[int],
-        previous_charges: dict[int, tuple[int, int]],
+        previous_charges: Genome,
         demand_values: list[float],
         distance_matrix: np.ndarray,
     ) -> None:
@@ -132,7 +135,7 @@ class Fitness:
         self.demand_values = demand_values
         self.distance_matrix = distance_matrix
 
-    def fitness_function(self, supply_charges: dict[int, tuple[int, int]]) -> float:
+    def fitness_function(self, supply_charges: Genome) -> float:
         try:
             ds = distribute_supply(supply_charges, self.sorted_demands,
                                    self.reverse_proximity)
@@ -142,46 +145,3 @@ class Fitness:
             return cost
         except AssertionError as e:
             return sys.maxsize
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Run Genetic Algorithm')
-    parser.add_argument('year',
-                        metavar='YEAR',
-                        type=int,
-                        help='the year to predict on',
-                        choices={2019, 2020})
-    parser.add_argument('-g',
-                        '--generations',
-                        metavar='\b',
-                        type=int,
-                        default=100,
-                        help='number of generations to run')
-    parser.add_argument('-p',
-                        '--population',
-                        metavar='\b',
-                        type=int,
-                        default=200,
-                        help='size of population')
-
-    args = parser.parse_args()
-    YEAR = args.year
-    GENERATIONS = args.generations
-    POPULATION_SIZE = args.population
-    print(YEAR, GENERATIONS, POPULATION_SIZE)
-    output_dir = 'outputs/'
-
-    demand_points: pd.DataFrame = load_demand_points(YEAR)
-    existing_infra: pd.DataFrame = load_infrastructure()
-    distance_matrix, reverse_proximity = load_distances()
-    previous_charges = load_previous_chargers(YEAR)
-    parking_slots: list[int] = existing_infra.total_parking_slots.to_list()
-
-    demand_values = demand_points.value.to_list()
-    sorted_demand_points = [
-        (int(dp.demand_point_index), dp.value)
-        for _, dp in demand_points.sort_values('value', ascending=False).iterrows()
-    ]
-
-    fit = Fitness(sorted_demand_points, reverse_proximity, parking_slots,
-                  previous_charges, demand_values, distance_matrix)

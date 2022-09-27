@@ -10,7 +10,6 @@ Steps in a Genetic Algorithm
 from __future__ import annotations
 
 import random
-import pickle
 import argparse
 import pandas as pd
 
@@ -24,7 +23,10 @@ from loader import load_infrastructure
 from loader import load_previous_chargers
 
 
-def offspring_generator(prob: float) -> dict[int, tuple[int, int]]:
+Genome = dict[int, tuple[int, int]]
+
+
+def offspring_generator(prob: float) -> Genome:
     temp_dict = {}
     for i in range(100):
         if random.random() > prob:
@@ -40,8 +42,8 @@ def offspring_generator(prob: float) -> dict[int, tuple[int, int]]:
     return temp_dict
 
 
-def crossover(parent1: dict, parent2: dict, start: int,
-              end: int) -> tuple[dict, dict]:
+def crossover(parent1: Genome, parent2: Genome, start: int,
+              end: int) -> tuple[Genome, Genome]:
     offspring1 = {}
     offspring2 = {}
     # one-point separation
@@ -55,10 +57,10 @@ def crossover(parent1: dict, parent2: dict, start: int,
     return (offspring1, offspring2)
 
 
-def crossover_twopoints(parent1: dict,
-                        parent2: dict,
+def crossover_twopoints(parent1: Genome,
+                        parent2: Genome,
                         start: int = None,
-                        end: int = None) -> tuple[dict, dict]:
+                        end: int = None) -> tuple[Genome, Genome]:
     offspring1 = {}
     offspring2 = {}
 
@@ -81,7 +83,7 @@ def crossover_twopoints(parent1: dict,
     return (offspring1, offspring2)
 
 
-def random_crossover(parent1: dict, parent2: dict):
+def random_crossover(parent1: Genome, parent2: Genome) -> tuple[Genome, Genome]:
     offspring1 = {}
     offspring2 = {}
     for gp1, gp2 in zip(parent1.items(), parent2.items()):
@@ -100,7 +102,7 @@ def random_crossover(parent1: dict, parent2: dict):
     return (offspring1, offspring2)
 
 
-def mutate(offspring: dict, num_of_charges: int) -> dict:
+def mutate(offspring: Genome, num_of_charges: int) -> Genome:
     for _ in range(num_of_charges):
         idx = random.choice(list(offspring.keys()))
         available_parking_slots = parking_slots[idx] - previous_charges[idx][
@@ -113,19 +115,6 @@ def mutate(offspring: dict, num_of_charges: int) -> dict:
     return offspring
 
 
-def save_file(solution):
-    a_file = open("solution.pkl", "wb")
-    pickle.dump(solution, a_file)
-    a_file.close()
-
-
-def load_pckl():
-    a_file = open("solution.pkl", "rb")
-    output = pickle.load(a_file)
-    a_file.close()
-    print(output)
-
-
 def run_evolution():
     population = []
     for _ in range(POPULATION_SIZE):
@@ -136,14 +125,7 @@ def run_evolution():
     # sort the population in increasing order of fitness score
     population = sorted(population, key=lambda x: x[1])
 
-    # current generation
-    generation = 1
-    best_per_population = []
-
-    pc = 0.8  # Probability of crossover
-    pm = 0.25  # Probability of mutation
-
-    while generation <= GENERATIONS:
+    for generation in range(GENERATIONS):
         # Perform Elitism, that mean 10% of fittest population
         # goes to the next generation
         s = (10 * POPULATION_SIZE) // 100
@@ -153,30 +135,16 @@ def run_evolution():
         s = (90 * POPULATION_SIZE) // 100
         s = s // 2
 
-        # Computes the totallity of the population fitness
-        population_fitness = sum([chromosome[1] for chromosome in population])
-
-        # Computes for each chromosome the probability
-        chromosome_probabilities = [
-            chromosome[1] / population_fitness for chromosome in population
-        ]
-
-        # Selects one chromosome based on the computed probabilities
-        # choice(population, p=chromosome_probabilities)
-        population_1 = [chromosome[0] for chromosome in population]
-
         # Dynamic calculation of pc & pm
-        pm = generation / GENERATIONS
-        pc = 1 - pm
+        pm = 1 - generation / GENERATIONS
+        pc = min(0.5 + generation/GENERATIONS, 1)
 
         for _ in range(s):
             # Selection οf chromosomes based on the computed probabilities
             # parent1 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
             # parent2 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
             parent1 = random.choice(population[:POPULATION_SIZE // 2])[0]
-            parent2 = random.choice(
-                population[:POPULATION_SIZE //
-                           2])[0]  #random.choice(population[:50])
+            parent2 = random.choice(population[:POPULATION_SIZE // 2])[0] 
 
             # Crossover
             if random.uniform(0, 1) < pc:
@@ -192,8 +160,6 @@ def run_evolution():
             else:
                 child1, child2 = parent1, parent2
 
-            # child1, child2 = crossover(parent1[0], parent2[0], 40, 60)
-
             # Mutate
             if random.uniform(0, 1) < pm:
                 child1 = mutate(child1, random.randint(10, 20))
@@ -203,21 +169,17 @@ def run_evolution():
             new_generation.append((child1, fit.fitness_function(child1)))
             new_generation.append((child2, fit.fitness_function(child2)))
 
-        population = new_generation
-
         # sort the population in increasing order of fitness score
         population = sorted(new_generation, key=lambda x: x[1])
 
-        best_per_population.append((population[0][0], population[0][1], generation))
         print(
-            f'Gen.: {generation}\t\t Cost: {population[0][1]}\t Worst cost: {population[-1][1]}'
+            f'Gen.: {generation}\t\t Cost: {population[0][1]}'
         )
 
-        generation += 1
 
     print('######################################')
     best_population, best_cost = population[0]
-    print(f'Gen.: {generation-1}\t\t Cost: {best_cost}')
+    print(f'Gen.: {generation+1}\t\t Cost: {best_cost}')
     best_ds = distribute_supply(best_population, sorted_demand_points,
                                 reverse_proximity)
 
@@ -249,7 +211,7 @@ if __name__ == '__main__':
     YEAR = args.year
     GENERATIONS = args.generations
     POPULATION_SIZE = args.population
-    print(YEAR, GENERATIONS, POPULATION_SIZE)
+
     output_dir = 'outputs/'
 
     demand_points: pd.DataFrame = load_demand_points(YEAR)
@@ -266,3 +228,5 @@ if __name__ == '__main__':
 
     fit = Fitness(sorted_demand_points, reverse_proximity, parking_slots,
                   previous_charges, demand_values, distance_matrix)
+
+    run_evolution()
