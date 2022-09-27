@@ -31,9 +31,9 @@ from loader import output_distribution
 from loader import load_infrastructure
 from loader import load_previous_chargers
 
-YEAR = 2020
-GENERATIONS = 750
-POPULATION_SIZE = 500  # Number of individuals in each generation
+YEAR = 2019
+GENERATIONS = 100
+POPULATION_SIZE = 5000  # Number of individuals in each generation
 output_dir = 'outputs/'
 
 demand_points: pd.DataFrame = load_demand_points(YEAR)
@@ -179,15 +179,15 @@ while generation <= GENERATIONS:
     s = s//2
 
     # Computes the totallity of the population fitness
-    population_fitness = sum([chromosome[1] for chromosome in population])
+    # population_fitness = sum([chromosome[1] for chromosome in population])
 
     # Computes for each chromosome the probability 
-    chromosome_probabilities = [chromosome[1]/population_fitness for chromosome in population]
+    # chromosome_probabilities = [chromosome[1]/population_fitness for chromosome in population]
 
 
     # Selects one chromosome based on the computed probabilities
     # choice(population, p=chromosome_probabilities)
-    population_1 = [chromosome[0] for chromosome in population]
+    # population_1 = [chromosome[0] for chromosome in population]
     
     # Dynamic calculation of pc & pm
     pm = generation/GENERATIONS
@@ -203,7 +203,7 @@ while generation <= GENERATIONS:
 
         # Crossover
         
-        if random.uniform(0, 1) <= 1:#pc:
+        if random.uniform(0, 1) <= 0.8:#pc:
             match random.randint(3,3):
                 case 1:
                     child1, child2 = crossover(parent1, parent2, 2, 98)
