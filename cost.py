@@ -114,21 +114,74 @@ def get_overall_cost(_ds: np.ndarray, _supply_charges: dict[int, tuple[int, int]
     return a * cost_1 + c * cost_3
 
 
-def fitness_function(
-    _supply_charges: dict[int, tuple[int, int]],
-    sorted_demands: pd.DataFrame,
-    reverse_proximity: np.ndarray,
-    parking_slots: list[int],
-    previous_charges: dict[int, tuple[int, int]],
-    demand_values: list[float],
-    distance_matrix: np.ndarray,
-) -> float:
-    try:
-        ds = distribute_supply(_supply_charges, sorted_demands, reverse_proximity)
-        check_constraints(ds, _supply_charges, parking_slots, previous_charges,
-                          demand_values)
-        cost = get_overall_cost(ds, _supply_charges, distance_matrix)
-        return cost
-    except AssertionError as e:
-        print(e)
-        return sys.maxsize
+class Fitness:
+
+    def __init__(
+        self,
+        sorted_demands: pd.DataFrame,
+        reverse_proximity: np.ndarray,
+        parking_slots: list[int],
+        previous_charges: dict[int, tuple[int, int]],
+        demand_values: list[float],
+        distance_matrix: np.ndarray,
+    ) -> None:
+        self.sorted_demands = sorted_demands
+        self.reverse_proximity = reverse_proximity
+        self.parking_slots = parking_slots
+        self.previous_charges = previous_charges
+        self.demand_values = demand_values
+        self.distance_matrix = distance_matrix
+
+    def fitness_function(self, supply_charges: dict[int, tuple[int, int]]) -> float:
+        try:
+            ds = distribute_supply(supply_charges, self.sorted_demands,
+                                   self.reverse_proximity)
+            check_constraints(ds, supply_charges, self.parking_slots,
+                              self.previous_charges, self.demand_values)
+            cost = get_overall_cost(ds, supply_charges, self.distance_matrix)
+            return cost
+        except AssertionError as e:
+            return sys.maxsize
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Run Genetic Algorithm')
+    parser.add_argument('year',
+                        metavar='YEAR',
+                        type=int,
+                        help='the year to predict on',
+                        choices={2019, 2020})
+    parser.add_argument('-g',
+                        '--generations',
+                        metavar='\b',
+                        type=int,
+                        default=100,
+                        help='number of generations to run')
+    parser.add_argument('-p',
+                        '--population',
+                        metavar='\b',
+                        type=int,
+                        default=200,
+                        help='size of population')
+
+    args = parser.parse_args()
+    YEAR = args.year
+    GENERATIONS = args.generations
+    POPULATION_SIZE = args.population
+    print(YEAR, GENERATIONS, POPULATION_SIZE)
+    output_dir = 'outputs/'
+
+    demand_points: pd.DataFrame = load_demand_points(YEAR)
+    existing_infra: pd.DataFrame = load_infrastructure()
+    distance_matrix, reverse_proximity = load_distances()
+    previous_charges = load_previous_chargers(YEAR)
+    parking_slots: list[int] = existing_infra.total_parking_slots.to_list()
+
+    demand_values = demand_points.value.to_list()
+    sorted_demand_points = [
+        (int(dp.demand_point_index), dp.value)
+        for _, dp in demand_points.sort_values('value', ascending=False).iterrows()
+    ]
+
+    fit = Fitness(sorted_demand_points, reverse_proximity, parking_slots,
+                  previous_charges, demand_values, distance_matrix)
