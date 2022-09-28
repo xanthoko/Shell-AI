@@ -21,7 +21,8 @@ from loader import load_demand_points
 from loader import output_distribution
 from loader import load_infrastructure
 from loader import load_previous_chargers
-
+from boost import convert_scs_to_fcs
+from boost import remove_excess_supply
 
 Genome = dict[int, tuple[int, int]]
 
@@ -137,14 +138,14 @@ def run_evolution():
 
         # Dynamic calculation of pc & pm
         pm = 1 - generation / GENERATIONS
-        pc = min(0.5 + generation/GENERATIONS, 1)
+        pc = min(0.5 + generation / GENERATIONS, 1)
 
         for _ in range(s):
             # Selection οf chromosomes based on the computed probabilities
             # parent1 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
             # parent2 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
             parent1 = random.choice(population[:POPULATION_SIZE // 2])[0]
-            parent2 = random.choice(population[:POPULATION_SIZE // 2])[0] 
+            parent2 = random.choice(population[:POPULATION_SIZE // 2])[0]
 
             # Crossover
             if random.uniform(0, 1) < pc:
@@ -172,16 +173,17 @@ def run_evolution():
         # sort the population in increasing order of fitness score
         population = sorted(new_generation, key=lambda x: x[1])
 
-        print(
-            f'Gen.: {generation}\t\t Cost: {population[0][1]}'
-        )
-
+        print(f'Gen.: {generation}\t\t Cost: {population[0][1]}')
 
     print('######################################')
     best_population, best_cost = population[0]
     print(f'Gen.: {generation+1}\t\t Cost: {best_cost}')
     best_ds = distribute_supply(best_population, sorted_demand_points,
                                 reverse_proximity)
+
+    # boost the best population
+    remove_excess_supply(best_population, previous_charges, best_ds)
+    convert_scs_to_fcs(best_population, previous_charges)
 
     output_chargers(best_population, YEAR)
     output_distribution(best_ds, YEAR)
@@ -217,7 +219,7 @@ if __name__ == '__main__':
     demand_points: pd.DataFrame = load_demand_points(YEAR)
     existing_infra: pd.DataFrame = load_infrastructure()
     distance_matrix, reverse_proximity = load_distances()
-    previous_charges = load_previous_chargers(YEAR)
+    previous_charges: Genome = load_previous_chargers(YEAR)
     parking_slots: list[int] = existing_infra.total_parking_slots.to_list()
 
     demand_values = demand_points.value.to_list()
