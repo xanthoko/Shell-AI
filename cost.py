@@ -30,9 +30,13 @@ def distribute_supply(supply_charges: Genome,
             selected_supply = reverse_proximity[demand_index][sp_index]
             supply_level = levels[selected_supply]
 
-            if supply_level > value:
-                ds[demand_index][selected_supply] = value
-                levels[selected_supply] -= value
+            if supply_level > 0:
+                given_supply = min(supply_level, value)
+                ds[demand_index, selected_supply] = given_supply
+                levels[selected_supply] -= given_supply
+                dd[i] = (demand_index, value - given_supply)
+            
+            if dd[i][1] == 0:
                 break
             sp_index += 1
     return ds
