@@ -30,10 +30,9 @@ def distribute_supply(supply_charges: Genome,
             selected_supply = reverse_proximity[demand_index][sp_index]
             supply_level = levels[selected_supply]
 
-            if supply_level > 0:
-                given_supply = min(supply_level, value)
-                ds[demand_index][selected_supply] = given_supply
-                levels[selected_supply] -= given_supply
+            if supply_level > value:
+                ds[demand_index][selected_supply] = value
+                levels[selected_supply] -= value
                 break
             sp_index += 1
     return ds
@@ -145,4 +144,5 @@ class Fitness:
             cost = get_overall_cost(ds, supply_charges, self.distance_matrix)
             return cost
         except AssertionError as e:
+            print(e)
             return sys.maxsize
