@@ -31,8 +31,9 @@ def distribute_supply(supply_charges: Genome,
             supply_level = levels[selected_supply]
 
             if supply_level > value:
-                ds[demand_index][selected_supply] = value
-                levels[selected_supply] -= value
+                given_supply = min(supply_level, value)
+                ds[demand_index][selected_supply] = given_supply
+                levels[selected_supply] -= given_supply
                 break
             sp_index += 1
     return ds
