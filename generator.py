@@ -9,14 +9,17 @@ Steps in a Genetic Algorithm
 """
 from __future__ import annotations
 
+from pprint import pprint
 import random
 import argparse
+from turtle import distance
 import pandas as pd
 
 from cost import Fitness
 from cost import distribute_supply
-from loader import load_distances
+from loader import load_distance
 from loader import output_chargers
+from loader import load_rev_proximity
 from loader import load_demand_points
 from loader import output_distribution
 from loader import load_infrastructure
@@ -127,6 +130,10 @@ def run_evolution():
     population = sorted(population, key=lambda x: x[1])
 
     for generation in range(GENERATIONS):
+        
+        pm = generation / GENERATIONS
+        pc = 1 - pm
+        
         # Perform Elitism, that mean 10% of fittest population
         # goes to the next generation
         s = (10 * POPULATION_SIZE) // 100
@@ -136,10 +143,6 @@ def run_evolution():
         s = (90 * POPULATION_SIZE) // 100
         s = s // 2
 
-        # Dynamic calculation of pc & pm
-        pm = 1 - generation / GENERATIONS
-        pc = min(0.5 + generation / GENERATIONS, 1)
-
         for _ in range(s):
             # Selection οf chromosomes based on the computed probabilities
             # parent1 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
@@ -148,21 +151,19 @@ def run_evolution():
             parent2 = random.choice(population[:POPULATION_SIZE // 2])[0]
 
             # Crossover
-            if random.uniform(0, 1) < pc:
-                rr = random.randint(1, 3)
-                if rr == 1:
-                    child1, child2 = crossover(parent1, parent2, 2, 98)
-                elif rr == 2:
-                    child1, child2 = crossover_twopoints(parent1, parent2)
-                elif rr == 3:
-                    child1, child2 = random_crossover(parent1, parent2)
-                else:
-                    child1, child2 = crossover(parent1, parent2, 40, 60)
-            else:
-                child1, child2 = parent1, parent2
+            if random.random() < pc:
+                child1, child2 = crossover(parent1, parent2, 35, 65)
+                # rr = random.randint(1, 3)
+                # if rr == 1:
+                #     child1, child2 = crossover(parent1, parent2, 2, 98)
+                # elif rr == 2:
+                #     child1, child2 = crossover_twopoints(parent1, parent2)
+                # elif rr == 3:
+                #     child1, child2 = random_crossover(parent1, parent2)
+                # else:
+                #     child1, child2 = crossover(parent1, parent2, 40, 60)
 
-            # Mutate
-            if random.uniform(0, 1) < pm:
+            if random.random() < pm:
                 child1 = mutate(child1, random.randint(10, 20))
                 child2 = mutate(child2, random.randint(10, 20))
 
@@ -172,8 +173,13 @@ def run_evolution():
 
         # sort the population in increasing order of fitness score
         population = sorted(new_generation, key=lambda x: x[1])
+        best_gen_genome, best_gen_score = population[0]
 
-        print(f'Gen.: {generation}\t\t Cost: {population[0][1]}')
+        # see unique genomes
+        unique_genomes = len(set([str(x[0].values()) for x in population]))
+        uniques_scores = len(set([x[1] for x in population]))
+
+        print(f'Gen.: {generation}\t\t Cost: {best_gen_score} \t Uniques: {unique_genomes}')
 
     print('######################################')
     best_population, best_cost = population[0]
@@ -218,7 +224,8 @@ if __name__ == '__main__':
 
     demand_points: pd.DataFrame = load_demand_points(YEAR)
     existing_infra: pd.DataFrame = load_infrastructure()
-    distance_matrix, reverse_proximity = load_distances()
+    distance_matrix = load_distance()
+    reverse_proximity = load_rev_proximity()
     previous_charges: Genome = load_previous_chargers(YEAR)
     parking_slots: list[int] = existing_infra.total_parking_slots.to_list()
 
