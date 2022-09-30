@@ -7,10 +7,12 @@ import pandas as pd
 dataset_dir = 'dataset/'
 output_dir = 'outputs/'
 
+Genome = dict[int, tuple[int, int]]
+
 
 def load_demand_points(year: int) -> pd.DataFrame:
     historic = pd.read_csv(dataset_dir + 'Demand_History.csv')
-    prophet_predictions = pd.read_csv(dataset_dir + 'prophet_2019_2020.csv')
+    prophet_predictions = pd.read_csv(dataset_dir + 'v2_ensemble_2019_2020.csv')
     if year == 2019:
         predictions = prophet_predictions.drop(
             ['2020'], axis=1).rename(columns={'2019': 'value'})
@@ -36,12 +38,15 @@ def load_infrastructure() -> pd.DataFrame:
         axis=1)
 
 
-def load_distances() -> tuple[np.ndarray, np.ndarray]:
-    return np.load(dataset_dir + 'distance.npy'), np.load(dataset_dir +
-                                                          'reverse_proximity.npy')
+def load_distance() -> np.ndarray:
+    return np.load(dataset_dir + 'distance.npy')
 
 
-def load_previous_chargers(year: int) -> dict[int, tuple[int, int]]:
+def load_rev_proximity() -> np.ndarray:
+    return np.load(dataset_dir + 'reverse_proximity.npy')
+
+
+def load_previous_chargers(year: int) -> Genome:
     if year == 2019:
         existing_infra = load_infrastructure()
     elif year == 2020:
@@ -51,7 +56,15 @@ def load_previous_chargers(year: int) -> dict[int, tuple[int, int]]:
     return {ind: (int(x.scs), int(x.fcs)) for ind, x in existing_infra.iterrows()}
 
 
-def output_chargers(supply_chargers: dict[int, tuple[int, int]], year: int) -> None:
+def load_chargers(year: int) -> pd.DataFrame:
+    return pd.read_csv(output_dir + f'chargers_{year}.csv')
+
+
+def load_ds(year: int) -> np.ndarray:
+    return np.load(output_dir + f'ds_{year}.npy')
+
+
+def output_chargers(supply_chargers: Genome, year: int) -> None:
     with open(output_dir + f'chargers_{year}.csv', 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow(['scs', 'fcs'])
