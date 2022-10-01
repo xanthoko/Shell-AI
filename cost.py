@@ -4,11 +4,10 @@ import sys
 import numpy as np
 import pandas as pd
 
-SLOW_CHARGE_CAP = 200
-FAST_CHARGE_CAP = 400
-
-
-Genome = dict[int, tuple[int, int]]
+from boost import get_redundant_chargers
+from definitions import Genome
+from definitions import SLOW_CHARGE_CAP
+from definitions import FAST_CHARGE_CAP
 
 
 def get_max_supply(supply_charge: tuple[int, int]) -> int:
@@ -148,5 +147,4 @@ class Fitness:
             cost = get_overall_cost(ds, supply_charges, self.distance_matrix)
             return cost
         except AssertionError as e:
-            print(e)
             return sys.maxsize

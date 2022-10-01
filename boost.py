@@ -4,9 +4,9 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from cost import Genome
-from cost import SLOW_CHARGE_CAP
-from cost import FAST_CHARGE_CAP
+from definitions import Genome
+from definitions import SLOW_CHARGE_CAP
+from definitions import FAST_CHARGE_CAP
 from loader import load_ds
 from loader import load_chargers
 from loader import output_chargers

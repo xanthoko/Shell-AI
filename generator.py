@@ -9,12 +9,12 @@ Steps in a Genetic Algorithm
 """
 from __future__ import annotations
 
-from pprint import pprint
 import random
 import argparse
-from turtle import distance
 import pandas as pd
 
+from definitions import Genome
+from definitions import Population
 from cost import Fitness
 from cost import distribute_supply
 from loader import load_distance
@@ -27,7 +27,14 @@ from loader import load_previous_chargers
 from boost import convert_scs_to_fcs
 from boost import remove_excess_supply
 
-Genome = dict[int, tuple[int, int]]
+
+def generate_population(size: int) -> Population:
+    population = []
+    for _ in range(size):
+        gnome = offspring_generator(random.uniform(0.95, 1))
+        score = fit.fitness_function(gnome)
+        population.append((gnome, score))
+    return population
 
 
 def offspring_generator(prob: float) -> Genome:
@@ -120,12 +127,7 @@ def mutate(offspring: Genome, num_of_charges: int) -> Genome:
 
 
 def run_evolution():
-    population = []
-    for _ in range(POPULATION_SIZE):
-        gnome = offspring_generator(random.uniform(0.95, 1))
-        score = fit.fitness_function(gnome)
-        population.append((gnome, score))
-
+    population = generate_population(POPULATION_SIZE)
     # sort the population in increasing order of fitness score
     population = sorted(population, key=lambda x: x[1])
 
@@ -136,32 +138,29 @@ def run_evolution():
         
         # Perform Elitism, that mean 10% of fittest population
         # goes to the next generation
-        s = (10 * POPULATION_SIZE) // 100
-        new_generation = population[:s]
+        s1 = (10 * POPULATION_SIZE) // 100
+        new_generation = population[:s1]
 
         # From 50% of fittest population, Individuals will mate to produce offspring
-        s = (90 * POPULATION_SIZE) // 100
-        s = s // 2
+        s2 = (90 * POPULATION_SIZE) // 100
+        s2 = s2 // 2
 
-        for _ in range(s):
+        for _ in range(s2):
             # Selection οf chromosomes based on the computed probabilities
-            # parent1 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
-            # parent2 = choice(population_1, p=chromosome_probabilities) #random.choice(population[:50])
             parent1 = random.choice(population[:POPULATION_SIZE // 2])[0]
             parent2 = random.choice(population[:POPULATION_SIZE // 2])[0]
 
             # Crossover
             if random.random() < pc:
-                child1, child2 = crossover(parent1, parent2, 35, 65)
-                # rr = random.randint(1, 3)
-                # if rr == 1:
-                #     child1, child2 = crossover(parent1, parent2, 2, 98)
-                # elif rr == 2:
-                #     child1, child2 = crossover_twopoints(parent1, parent2)
-                # elif rr == 3:
-                #     child1, child2 = random_crossover(parent1, parent2)
-                # else:
-                #     child1, child2 = crossover(parent1, parent2, 40, 60)
+                rr = random.randint(1, 3)
+                if rr == 1:
+                    child1, child2 = crossover(parent1, parent2, 2, 98)
+                elif rr == 2:
+                    child1, child2 = crossover_twopoints(parent1, parent2)
+                elif rr == 3:
+                    child1, child2 = random_crossover(parent1, parent2)
+                else:
+                    child1, child2 = crossover(parent1, parent2, 40, 60)
 
             if random.random() < pm:
                 child1 = mutate(child1, random.randint(10, 20))
