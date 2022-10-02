@@ -28,7 +28,7 @@ The parameters of the weighted summation are produced by the scipy's minimize mo
 
 
 ## Demand-supply matrix generation
-Write here about Demand-supply matrix generation appeoaches
+The Demand-supply matrix is filled via the following greedy rule. The demand of the highest valued demand points is fullfiled first from their nearest neighbors. 
 
 ## Implementation of Genetic
 ### 1. Population initialization
