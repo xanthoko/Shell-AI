@@ -22,15 +22,13 @@ region collectively create a *supply map* over a region.
 Using the demand map, supply map, demand-supply constraints and objective, we can optimally choose to place the EV charging stations so that the designed EV infrastructure is best suited to cater the forecasted demand.
 
 ## Predictions
-Write here about predictions methods, models, librarties etc
+The forecast of the demand points is made by taking into account an ensemble of the predictions made by the Facebook's NeuralProphet library and sklearn LinearRegression module.
+
+The parameters of the weighted summation are produced by the scipy's minimize module, which is used to minimize the mean absolute error between demand and prediction values. Afterwards, we predict the demand for the years 2019 and 2020. We used several timeseries forecasting methods (SARIMAX, Polynomial Regression, Prophet, LightGBM) but the above approach, gave us the best results.
+
 
 ## Demand-supply matrix generation
 Write here about Demand-supply matrix generation appeoaches
-
-## Forecasts
-The forecast of the demand points is made by taking into account an ensemble of the predictions made by the Facebook's NeuralProphet library and sklearn LinearRegression module.
-The parameters of the weighted summation are produced by the scipy's minimize module, which is used to minimize the mean absolute error between demand and prediction values. Afterwards, we predict the demand for the years 2019 and 2020. We used several timeseries forecasting methods (SARIMAX, Polynomial Regression, Prophet, LightGBM) but the above approach, gave us the best results.
-
 
 ## Implementation of Genetic
 ### 1. Population initialization
