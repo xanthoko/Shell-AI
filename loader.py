@@ -10,7 +10,8 @@ output_dir = 'outputs/'
 
 def load_demand_points(year: int) -> pd.DataFrame:
     historic = pd.read_csv(dataset_dir + 'Demand_History.csv')
-    prophet_predictions = pd.read_csv(dataset_dir + 'prophet_2019_2020.csv')
+    # prophet_predictions = pd.read_csv(dataset_dir + 'prophet_2019_2020.csv')
+    prophet_predictions = pd.read_csv(dataset_dir + 'ensemble_2019_2020.csv')
     if year == 2019:
         predictions = prophet_predictions.drop(
             ['2020'], axis=1).rename(columns={'2019': 'value'})
