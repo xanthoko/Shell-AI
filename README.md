@@ -21,6 +21,34 @@ region collectively create a *supply map* over a region.
 
 Using the demand map, supply map, demand-supply constraints and objective, we can optimally choose to place the EV charging stations so that the designed EV infrastructure is best suited to cater the forecasted demand.
 
+## Predictions
+Write here about predictions methods, models, librarties etc
+
+## Demand-supply matrix generation
+Write here about Demand-supply matrix generation appeoaches
+
+## Implementation of Genetic
+### 1. Population initialization
+The following function randomly generates valid EV Charger distributions in the available Parking lots of the supply points.
+`
+offspring_generator(prob: float) -> dict[int, tuple[int, int]]
+`
+### 2. Parent Selection based on their fitness
+The following methods have been used for parent selection:
+* Roulette Wheel Selection
+* Elitism Selection
+* Tournament Selection
+
+### 3. Crossover parents to reproduce
+For crossover implementation we used a variety of methods, but mainly the following ones:
+* One-point crossover
+* Two-point and k-point crossover
+* Uniform crossover
+
+### 4. Offspring Mutation
+Since the charger distribution is limited by many contraints, a very simple mutate method has been applied. A randomly number of supply points have been selected and their chargers have been re-assigned again in a random, but still valid way.
+### 5. Offspring evaluation
+Finally offspring evaluation takes place and merging with the main population follows. 
 
 ## Pipeline for result generation
 The pipeline to produce a valid submission file is:
@@ -46,3 +74,8 @@ Creates a submission.csv file in the *outputs/* directory
 ```
 python validate.py outputs/submission.csv
 ```
+
+## The Team
+<a href = "https://github.com/xanthoko/Shell-AI/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo = xanthoko/Shell-AI"/>
+</a>
