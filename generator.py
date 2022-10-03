@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import random
 import argparse
+import numpy as np
 import pandas as pd
 
 from definitions import Genome
@@ -68,16 +69,9 @@ def crossover(parent1: Genome, parent2: Genome, start: int,
     return (offspring1, offspring2)
 
 
-def crossover_twopoints(parent1: Genome,
-                        parent2: Genome,
-                        start: int = None,
-                        end: int = None) -> tuple[Genome, Genome]:
+def crossover_twopoints(parent1: Genome, parent2: Genome) -> tuple[Genome, Genome]:
     offspring1 = {}
     offspring2 = {}
-
-    # two-point separation
-    # point_one = random.randint(start, start + 45)
-    # point_two = random.randint(end, end + 45)
 
     # two-point separation
     point_one = random.randint(2, 80)
@@ -98,9 +92,8 @@ def random_crossover(parent1: Genome, parent2: Genome) -> tuple[Genome, Genome]:
     offspring1 = {}
     offspring2 = {}
     for gp1, gp2 in zip(parent1.items(), parent2.items()):
-        # random probability
         prob = random.random()
-        # if prob is less than 0.45, insert gene from parent 1
+        # if prob is less than 0.5, insert gene from parent 1
         if prob < 0.5:
             offspring1.update({gp1[0]: gp1[1]})
             offspring2.update({gp2[0]: gp2[1]})
@@ -132,10 +125,10 @@ def run_evolution():
     population = sorted(population, key=lambda x: x[1])
 
     for generation in range(GENERATIONS):
-        
+
         pm = generation / GENERATIONS
         pc = 1 - pm
-        
+
         # Perform Elitism, that mean 10% of fittest population
         # goes to the next generation
         s1 = (10 * POPULATION_SIZE) // 100
@@ -172,13 +165,14 @@ def run_evolution():
 
         # sort the population in increasing order of fitness score
         population = sorted(new_generation, key=lambda x: x[1])
-        best_gen_genome, best_gen_score = population[0]
+        best_gen_score = population[0][1]
 
         # see unique genomes
         unique_genomes = len(set([str(x[0].values()) for x in population]))
-        uniques_scores = len(set([x[1] for x in population]))
 
-        print(f'Gen.: {generation}\t\t Cost: {best_gen_score} \t Uniques: {unique_genomes}')
+        print(
+            f'Gen.: {generation}\t\t Cost: {best_gen_score} \t Uniques: {unique_genomes}'
+        )
 
     print('######################################')
     best_population, best_cost = population[0]
@@ -223,12 +217,12 @@ if __name__ == '__main__':
 
     demand_points: pd.DataFrame = load_demand_points(YEAR)
     existing_infra: pd.DataFrame = load_infrastructure()
-    distance_matrix = load_distance()
-    reverse_proximity = load_rev_proximity()
+    distance_matrix: np.ndarray = load_distance()
+    reverse_proximity: np.ndarray = load_rev_proximity()
     previous_charges: Genome = load_previous_chargers(YEAR)
     parking_slots: list[int] = existing_infra.total_parking_slots.to_list()
 
-    demand_values = demand_points.value.to_list()
+    demand_values: list[float] = demand_points.value.to_list()
     sorted_demand_points = [
         (int(dp.demand_point_index), dp.value)
         for _, dp in demand_points.sort_values('value', ascending=False).iterrows()

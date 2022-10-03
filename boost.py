@@ -13,15 +13,13 @@ from loader import output_chargers
 from loader import load_previous_chargers
 
 
-def get_redundant_chargers(chargers: tuple[int, int],
-                           supply_used: float,
+def get_redundant_chargers(chargers: tuple[int, int], supply_used: float,
                            previous_chargers: tuple[int, int]) -> tuple[int, int]:
     scs, fcs = chargers
     available_supply = SLOW_CHARGE_CAP * scs + FAST_CHARGE_CAP * fcs
     diff = available_supply - supply_used
 
-    # the diff has to be greater than 200 to be able to remove at
-    # least a charger
+    # the diff has to be greater than 200 to be able to remove at least one charger
     if diff < 200:
         return 0, 0
 
@@ -47,11 +45,8 @@ def remove_excess_supply(chargers: Genome, previous_chargers: Genome,
     supplies_used = np.sum(ds, axis=0)
 
     for i, charger in chargers.items():
-        removed_scs, removed_fcs = get_redundant_chargers(
-            charger,
-            supplies_used[i],
-            previous_chargers[i]
-        )
+        removed_scs, removed_fcs = get_redundant_chargers(charger, supplies_used[i],
+                                                          previous_chargers[i])
 
         total_removed_scs += removed_scs
         total_removed_fcs += removed_fcs
