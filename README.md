@@ -6,7 +6,11 @@ Our solution for the [Shell.ai hackathon](https://www.hackerearth.com/challenges
 
 The task was to optimise an electric vehicle (EV) charging network, so it remains robust to demographic changes and meets customer demand.
 
-<img src="dataset/assets/grid.png" alt="Example grid" style="height: 400px; width:400px;"/>
+<p align='center'>
+  <img src="dataset/assets/grid.png" alt="Example grid" style="height: 400px; width:400px;"/>
+  <figcaption align = "center"><b>Example 5x5 demand Grid</b></figcaption>
+</p>
+<br>
 
 In this problem we were given a grid of 64x64 blocks. Total EV charging demand of each block is represented at the centre of the block and is called **demand point**. All demand points of a geographic region collectively create a *demand map* over the region of interest.
 
@@ -44,7 +48,11 @@ The best strategy was number 3 beacuse it minimized the travel time of the highe
 ### Implementation of Genetic Algorithm
 The main challenge was to find an optimal distribution of supply chargers that minimized the overall cost. For that we decided to use a genetic algorithm.
 
-<img src="dataset/assets/GA.png" alt="Genetic Algorithm" style="height: 350px; width:450px;"/>
+<p align='center'>
+  <img src="dataset/assets/GA.png" alt="Genetic Algorithm" style="height: 350px; width:450px;"/>
+  <figcaption align = "center"><b>Genetic Algorithm Flowchart</b></figcaption>
+</p>
+<br>
 
 #### 1. Population initialization
 The following function randomly generates valid EV Charger distributions in the available Parking lots of the supply points.
