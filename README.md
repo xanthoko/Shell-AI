@@ -44,7 +44,7 @@ The best strategy was number 3 beacuse it minimized the travel time of the highe
 ### Implementation of Genetic Algorithm
 The main challenge was to find an optimal distribution of supply chargers that minimized the overall cost. For that we decided to use a genetic algorithm.
 
-<img src="dataset/assets/ga.png" alt="Genetic Algorithm" style="height: 350px; width:450px;"/>
+<img src="dataset/assets/GA.png" alt="Genetic Algorithm" style="height: 350px; width:450px;"/>
 
 #### 1. Population initialization
 The following function randomly generates valid EV Charger distributions in the available Parking lots of the supply points.
