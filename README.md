@@ -8,8 +8,8 @@ The task was to optimise an electric vehicle (EV) charging network, so it remain
 
 <p align='center'>
   <img src="dataset/assets/grid.png" alt="Example grid" style="height: 400px; width:400px;"/>
-  <figcaption align = "center"><b>Example 5x5 demand Grid</b></figcaption>
 </p>
+<figcaption align = "center"><b>Example 5x5 demand Grid</b></figcaption>
 <br>
 
 In this problem we were given a grid of 64x64 blocks. Total EV charging demand of each block is represented at the centre of the block and is called **demand point**. All demand points of a geographic region collectively create a *demand map* over the region of interest.
@@ -50,8 +50,8 @@ The main challenge was to find an optimal distribution of supply chargers that m
 
 <p align='center'>
   <img src="dataset/assets/GA.png" alt="Genetic Algorithm" style="height: 350px; width:450px;"/>
-  <figcaption align = "center"><b>Genetic Algorithm Flowchart</b></figcaption>
 </p>
+<figcaption align = "center"><b>Genetic Algorithm Flowchart</b></figcaption>
 <br>
 
 #### 1. Population initialization
