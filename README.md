@@ -108,6 +108,6 @@ python validate.py outputs/submission.csv
 ```
 
 ## The Team
-<a href = "https://github.com/xanthoko/Shell-AI/graphs/contributors">
-  <img src = "https://contrib.rocks/image?repo = xanthoko/Shell-AI"/>
+<a href="https://github.com/xanthoko/Shell-AI/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=xanthoko/Shell-AI" />
 </a>
